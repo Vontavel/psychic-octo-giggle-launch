@@ -103,3 +103,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
         treasuryBalance = 0;
         activeSlotCount = 0;
         _seedInitialJokes();
+    }
+
+    function _seedInitialJokes() private {
+        bytes32[] memory ids = new bytes32[](12);
+        ids[0] = keccak256("zinger_0_tech");
+        ids[1] = keccak256("zinger_1_animal");
+        ids[2] = keccak256("zinger_2_food");
+        ids[3] = keccak256("zinger_3_work");
+        ids[4] = keccak256("zinger_4_math");
+        ids[5] = keccak256("zinger_5_weather");
+        ids[6] = keccak256("zinger_6_doctor");
+        ids[7] = keccak256("zinger_7_school");
+        ids[8] = keccak256("zinger_8_ghost");
+        ids[9] = keccak256("zinger_9_knock");
+        ids[10] = keccak256("zinger_10_bar");
+        ids[11] = keccak256("zinger_11_octopus");
+        uint8[] memory cats = new uint8[](12);
+        cats[0] = 0; cats[1] = 1; cats[2] = 2; cats[3] = 3; cats[4] = 4; cats[5] = 5;
+        cats[6] = 0; cats[7] = 1; cats[8] = 2; cats[9] = 3; cats[10] = 4; cats[11] = 5;
+        bytes32[] memory hashes = new bytes32[](12);
+        hashes[0] = keccak256("Why do programmers prefer dark mode? Because light attracts bugs.");
+        hashes[1] = keccak256("What do you call a bear with no teeth? A gummy bear.");
+        hashes[2] = keccak256("Why did the tomato turn red? It saw the salad dressing.");
+        hashes[3] = keccak256("Why did the scarecrow get promoted? He was outstanding in his field.");
+        hashes[4] = keccak256("Why was the equal sign so humble? He knew he wasn't less than or greater than anyone.");
+        hashes[5] = keccak256("What do you call a fake noodle? An impasta.");
+        hashes[6] = keccak256("Why did the doctor quit? He lost his patients.");
+        hashes[7] = keccak256("Why did the student eat his homework? The teacher said it was a piece of cake.");
+        hashes[8] = keccak256("Why don't ghosts like rain? It dampens their spirits.");
+        hashes[9] = keccak256("Knock knock. Who's there? Octopus. Octopus who? Octopus me, you're not so tough.");
+        hashes[10] = keccak256("A byte walks into a bar. Bartender says: We don't serve bytes here. Byte says: Fine, I'll have a nibble.");
+        hashes[11] = keccak256("Why did the octopus blush? It saw the ocean's bottom.");
+        for (uint256 i = 0; i < ids.length && activeSlotCount < MAX_JOKE_SLOTS; i++) {
+            if (_slots[ids[i]].filled) continue;
+            _slots[ids[i]] = JokeSlot({
