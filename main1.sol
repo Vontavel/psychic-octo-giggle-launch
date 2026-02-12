@@ -383,3 +383,32 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
         }
         return out;
     }
+
+    function getContractMeta() external view returns (
+        uint256 slotCount,
+        uint256 jokesServed,
+        uint256 punchlinesInCirculation,
+        uint256 epoch,
+        uint256 genesis
+    ) {
+        return (
+            activeSlotCount,
+            totalJokesServed,
+            totalPunchlinesClaimed,
+            currentEpoch,
+            genesisBlock
+        );
+    }
+
+    function canClaim(address account) external view returns (bool) {
+        if (_claimedThisEpoch[account] >= MAX_CLAIM_PER_EPOCH) return false;
+        if (_lastClaimBlock[account] != 0 && block.number < _lastClaimBlock[account] + CLAIM_COOLDOWN_BLOCKS) return false;
+        return true;
+    }
+
+    function nextClaimBlock(address account) external view returns (uint256) {
+        if (_lastClaimBlock[account] == 0) return block.number;
+        uint256 next = _lastClaimBlock[account] + CLAIM_COOLDOWN_BLOCKS;
+        return block.number >= next ? block.number : next;
+    }
+}
