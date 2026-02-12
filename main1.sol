@@ -173,3 +173,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
 
     function requestJoke(bytes32 slotId) external whenNotPaused nonReentrant returns (uint8 categoryIndex, bytes32 contentHash, uint256 creditsGranted) {
         if (slotId == bytes32(0)) revert ZingerErr_ZeroSlotId();
+        JokeSlot storage s = _slots[slotId];
+        if (!s.filled) revert ZingerErr_SlotEmpty();
+        _maybeRollEpoch();
+        uint256 claim = PUNCHLINE_CLAIM_PER_JOKE;
+        uint256 alreadyThisEpoch = _claimedThisEpoch[msg.sender];
+        if (alreadyThisEpoch + claim > MAX_CLAIM_PER_EPOCH) {
+            claim = alreadyThisEpoch >= MAX_CLAIM_PER_EPOCH ? 0 : MAX_CLAIM_PER_EPOCH - alreadyThisEpoch;
+        }
+        if (block.number < _lastClaimBlock[msg.sender] + CLAIM_COOLDOWN_BLOCKS && alreadyThisEpoch > 0) {
+            claim = 0;
+        }
+        if (claim > 0) {
+            punchlineBalance[msg.sender] += claim;
+            totalPunchlinesClaimed += claim;
+            _claimedThisEpoch[msg.sender] += claim;
+            _lastClaimBlock[msg.sender] = block.number;
+            emit PunchlineCredited(msg.sender, claim, currentEpoch, block.number);
+        }
+        totalJokesServed++;
+        emit JokeServed(slotId, msg.sender, s.categoryIndex, block.number, claim);
+        return (s.categoryIndex, s.contentHash, claim);
+    }
+
+    function requestJokeByIndex(uint256 slotIndex) external whenNotPaused nonReentrant returns (bytes32 slotId, uint8 categoryIndex, bytes32 contentHash, uint256 creditsGranted) {
+        if (slotIndex >= _slotIdList.length) revert ZingerErr_InvalidSlotIndex();
+        slotId = _slotIdList[slotIndex];
+        JokeSlot storage s = _slots[slotId];
+        if (!s.filled) revert ZingerErr_SlotEmpty();
+        _maybeRollEpoch();
+        uint256 claim = PUNCHLINE_CLAIM_PER_JOKE;
+        uint256 alreadyThisEpoch = _claimedThisEpoch[msg.sender];
+        if (alreadyThisEpoch + claim > MAX_CLAIM_PER_EPOCH) {
+            claim = alreadyThisEpoch >= MAX_CLAIM_PER_EPOCH ? 0 : MAX_CLAIM_PER_EPOCH - alreadyThisEpoch;
+        }
+        if (block.number < _lastClaimBlock[msg.sender] + CLAIM_COOLDOWN_BLOCKS && alreadyThisEpoch > 0) {
