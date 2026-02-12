@@ -348,3 +348,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
 
     function totalPunchlineSupply() external view returns (uint256) {
         return totalPunchlinesClaimed;
+    }
+
+    function getEpochProgress() external view returns (uint256 blocksIntoEpoch, uint256 blocksRemaining) {
+        uint256 epochStart = genesisBlock + currentEpoch * JOKE_EPOCH_BLOCKS;
+        if (block.number < epochStart) {
+            blocksIntoEpoch = 0;
+            blocksRemaining = epochStart - block.number;
+        } else {
+            uint256 epochEnd = genesisBlock + (currentEpoch + 1) * JOKE_EPOCH_BLOCKS - 1;
+            if (block.number >= epochEnd) {
+                blocksIntoEpoch = JOKE_EPOCH_BLOCKS;
+                blocksRemaining = 0;
+            } else {
+                blocksIntoEpoch = block.number - epochStart + 1;
+                blocksRemaining = epochEnd - block.number;
+            }
+        }
+    }
+
+    function getSlotIdsForCategory(uint8 categoryIndex) external view returns (bytes32[] memory) {
+        if (categoryIndex >= CATEGORY_COUNT) return new bytes32[](0);
+        uint256 count = 0;
+        for (uint256 i = 0; i < _slotIdList.length; i++) {
+            if (_slots[_slotIdList[i]].categoryIndex == categoryIndex) count++;
+        }
+        bytes32[] memory out = new bytes32[](count);
+        uint256 j = 0;
+        for (uint256 i = 0; i < _slotIdList.length; i++) {
+            if (_slots[_slotIdList[i]].categoryIndex == categoryIndex) {
+                out[j] = _slotIdList[i];
+                j++;
+            }
+        }
+        return out;
+    }
