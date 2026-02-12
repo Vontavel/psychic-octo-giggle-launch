@@ -208,3 +208,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
             claim = alreadyThisEpoch >= MAX_CLAIM_PER_EPOCH ? 0 : MAX_CLAIM_PER_EPOCH - alreadyThisEpoch;
         }
         if (block.number < _lastClaimBlock[msg.sender] + CLAIM_COOLDOWN_BLOCKS && alreadyThisEpoch > 0) {
+            claim = 0;
+        }
+        if (claim > 0) {
+            punchlineBalance[msg.sender] += claim;
+            totalPunchlinesClaimed += claim;
+            _claimedThisEpoch[msg.sender] += claim;
+            _lastClaimBlock[msg.sender] = block.number;
+            emit PunchlineCredited(msg.sender, claim, currentEpoch, block.number);
+        }
+        totalJokesServed++;
+        emit JokeServed(slotId, msg.sender, s.categoryIndex, block.number, claim);
+        return (slotId, s.categoryIndex, s.contentHash, claim);
+    }
+
+    function _maybeRollEpoch() private {
+        uint256 epochFromGenesis = (block.number - genesisBlock) / JOKE_EPOCH_BLOCKS;
+        if (epochFromGenesis > currentEpoch && !_epochAdvanced[epochFromGenesis]) {
+            uint256 prev = currentEpoch;
+            currentEpoch = epochFromGenesis;
+            _epochAdvanced[epochFromGenesis] = true;
+            emit EpochRolled(prev, currentEpoch, block.number);
+        }
+    }
+
+    function rollEpoch() external onlyEpochRoller whenNotPaused {
+        uint256 epochFromGenesis = (block.number - genesisBlock) / JOKE_EPOCH_BLOCKS;
+        if (epochFromGenesis <= currentEpoch) revert ZingerErr_EpochWindowNotReached();
+        uint256 prev = currentEpoch;
+        currentEpoch = epochFromGenesis;
+        _epochAdvanced[epochFromGenesis] = true;
+        emit EpochRolled(prev, currentEpoch, block.number);
+    }
+
+    function topTreasury() external payable whenNotPaused {
+        if (msg.value == 0) return;
