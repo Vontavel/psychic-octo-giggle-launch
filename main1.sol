@@ -68,3 +68,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
     uint256 public activeSlotCount;
 
     mapping(bytes32 => JokeSlot) private _slots;
+    mapping(address => uint256) public punchlineBalance;
+    mapping(address => uint256) private _lastClaimBlock;
+    mapping(address => uint256) private _claimedThisEpoch;
+    mapping(uint256 => bool) private _epochAdvanced;
+    bytes32[] private _slotIdList;
+
+    struct JokeSlot {
+        bytes32 slotId;
+        uint8 categoryIndex;
+        bytes32 contentHash;
+        uint256 enlistedAtBlock;
+        bool filled;
+    }
+
+    modifier onlyCurator() {
+        if (msg.sender != zingerCurator) revert ZingerErr_NotCurator();
+        _;
+    }
+
+    modifier onlyEpochRoller() {
+        if (msg.sender != zingerCurator && msg.sender != zingerTreasury) revert ZingerErr_NotEpochRoller();
+        _;
+    }
+
+    constructor() {
+        zingerCurator = address(0x8a3fE91bC2d4567e0F1a9c8B4e7D2f6A3c0b5E1);
+        zingerTreasury = address(0x1d7F4e9A2c6b0E8f3a5C1d9B7e4F2a6c0D8b3f);
+        genesisBlock = block.number;
+        jokeSeed = keccak256(abi.encodePacked(block.timestamp, block.prevrandao, block.chainid));
+        currentEpoch = 0;
+        totalJokesServed = 0;
+        totalPunchlinesClaimed = 0;
+        treasuryBalance = 0;
+        activeSlotCount = 0;
+        _seedInitialJokes();
