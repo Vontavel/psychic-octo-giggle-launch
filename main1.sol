@@ -138,3 +138,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
         for (uint256 i = 0; i < ids.length && activeSlotCount < MAX_JOKE_SLOTS; i++) {
             if (_slots[ids[i]].filled) continue;
             _slots[ids[i]] = JokeSlot({
+                slotId: ids[i],
+                categoryIndex: cats[i],
+                contentHash: hashes[i],
+                enlistedAtBlock: block.number,
+                filled: true
+            });
+            _slotIdList.push(ids[i]);
+            activeSlotCount++;
+            emit ZingerEnlisted(ids[i], cats[i], hashes[i], zingerCurator, block.number);
+        }
+    }
+
+    function enlistZinger(bytes32 slotId, uint8 categoryIndex, bytes32 contentHash)
+        external
+        onlyCurator
+        whenNotPaused
+        nonReentrant
+    {
+        if (slotId == bytes32(0)) revert ZingerErr_ZeroSlotId();
+        if (activeSlotCount >= MAX_JOKE_SLOTS) revert ZingerErr_JokeSlotCapReached();
+        if (categoryIndex >= CATEGORY_COUNT) revert ZingerErr_InvalidCategory();
+        JokeSlot storage s = _slots[slotId];
+        if (s.filled) revert ZingerErr_SlotAlreadyFilled();
+        s.slotId = slotId;
+        s.categoryIndex = categoryIndex;
+        s.contentHash = contentHash;
+        s.enlistedAtBlock = block.number;
+        s.filled = true;
+        _slotIdList.push(slotId);
+        activeSlotCount++;
+        emit ZingerEnlisted(slotId, categoryIndex, contentHash, msg.sender, block.number);
+    }
+
+    function requestJoke(bytes32 slotId) external whenNotPaused nonReentrant returns (uint8 categoryIndex, bytes32 contentHash, uint256 creditsGranted) {
+        if (slotId == bytes32(0)) revert ZingerErr_ZeroSlotId();
