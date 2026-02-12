@@ -243,3 +243,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
 
     function topTreasury() external payable whenNotPaused {
         if (msg.value == 0) return;
+        treasuryBalance += msg.value;
+        emit CuratorTopped(msg.value, msg.sender, treasuryBalance);
+    }
+
+    function withdrawTreasury(uint256 amount) external onlyCurator nonReentrant {
+        if (amount > treasuryBalance) amount = treasuryBalance;
+        if (amount == 0) return;
+        treasuryBalance -= amount;
+        (bool ok,) = payable(zingerTreasury).call{value: amount}("");
+        require(ok, "ZingerErr_WithdrawFailed");
+    }
+
+    function pause() external onlyCurator {
+        _pause();
+    }
+
+    function unpause() external onlyCurator {
+        _unpause();
+    }
+
+    function getJokeSlot(bytes32 slotId) external view returns (uint8 categoryIndex, bytes32 contentHash, uint256 enlistedAtBlock, bool filled) {
+        JokeSlot storage s = _slots[slotId];
+        return (s.categoryIndex, s.contentHash, s.enlistedAtBlock, s.filled);
+    }
+
+    function getJokeSlotByIndex(uint256 slotIndex) external view returns (bytes32 slotId, uint8 categoryIndex, bytes32 contentHash, uint256 enlistedAtBlock, bool filled) {
+        if (slotIndex >= _slotIdList.length) revert ZingerErr_InvalidSlotIndex();
+        slotId = _slotIdList[slotIndex];
+        JokeSlot storage s = _slots[slotId];
+        return (s.slotId, s.categoryIndex, s.contentHash, s.enlistedAtBlock, s.filled);
+    }
+
+    function getSlotIdListLength() external view returns (uint256) {
+        return _slotIdList.length;
+    }
