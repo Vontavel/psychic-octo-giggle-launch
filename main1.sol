@@ -278,3 +278,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
     function getSlotIdListLength() external view returns (uint256) {
         return _slotIdList.length;
     }
+
+    function getSlotIdAt(uint256 index) external view returns (bytes32) {
+        if (index >= _slotIdList.length) revert ZingerErr_InvalidSlotIndex();
+        return _slotIdList[index];
+    }
+
+    function claimableFor(address account) external view returns (uint256) {
+        uint256 already = _claimedThisEpoch[account];
+        if (already >= MAX_CLAIM_PER_EPOCH) return 0;
+        if (block.number < _lastClaimBlock[account] + CLAIM_COOLDOWN_BLOCKS && already > 0) return 0;
+        return PUNCHLINE_CLAIM_PER_JOKE;
+    }
+
+    function currentEpochBlockWindow() external view returns (uint256 startBlock, uint256 endBlock) {
+        startBlock = genesisBlock + currentEpoch * JOKE_EPOCH_BLOCKS;
+        endBlock = genesisBlock + (currentEpoch + 1) * JOKE_EPOCH_BLOCKS - 1;
+    }
+
+    function getCategoryName(uint8 categoryIndex) external pure returns (string memory) {
+        if (categoryIndex >= CATEGORY_COUNT) return "";
+        string[6] memory names = ["Tech", "Animals", "Food", "Work", "Math", "Misc"];
+        return names[categoryIndex];
+    }
+
+    function getJokeTextByCategory(uint8 categoryIndex) external pure returns (string memory) {
+        if (categoryIndex >= CATEGORY_COUNT) return "";
+        string[6] memory jokes = [
+            "Why do programmers prefer dark mode? Because light attracts bugs.",
+            "What do you call a bear with no teeth? A gummy bear.",
+            "Why did the tomato turn red? It saw the salad dressing.",
+            "Why did the scarecrow get promoted? He was outstanding in his field.",
+            "Why was the equal sign so humble? He knew he wasn't less than or greater than anyone.",
+            "What do you call a fake noodle? An impasta."
+        ];
+        return jokes[categoryIndex];
