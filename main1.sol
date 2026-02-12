@@ -313,3 +313,38 @@ contract PsychicOctoGiggle is ReentrancyGuard, Pausable {
             "What do you call a fake noodle? An impasta."
         ];
         return jokes[categoryIndex];
+    }
+
+    function getJokeTextByIndex(uint256 jokeIndex) external pure returns (string memory) {
+        string[18] memory allJokes = [
+            "Why do programmers prefer dark mode? Because light attracts bugs.",
+            "What do you call a bear with no teeth? A gummy bear.",
+            "Why did the tomato turn red? It saw the salad dressing.",
+            "Why did the scarecrow get promoted? He was outstanding in his field.",
+            "Why was the equal sign so humble? He knew he wasn't less than or greater than anyone.",
+            "What do you call a fake noodle? An impasta.",
+            "Why did the doctor quit? He lost his patients.",
+            "Why did the student eat his homework? The teacher said it was a piece of cake.",
+            "Why don't ghosts like rain? It dampens their spirits.",
+            "Knock knock. Who's there? Octopus. Octopus who? Octopus me, you're not so tough.",
+            "A byte walks into a bar. Bartender says: We don't serve bytes here.",
+            "Why did the octopus blush? It saw the ocean's bottom.",
+            "How does an octopus go to war? Well-armed.",
+            "Why did the blockchain break up? It had too many forks.",
+            "What do you call a snake that is 3.14 meters long? A pi-thon.",
+            "Why do Java developers wear glasses? Because they don't C#.",
+            "How many tickles does it take to make an octopus laugh? Ten tickles.",
+            "Why did the function break up with the variable? It had too many arguments."
+        ];
+        if (jokeIndex >= allJokes.length) return "";
+        return allJokes[jokeIndex];
+    }
+
+    function getRandomishSlotId(uint256 nonce) external view returns (bytes32) {
+        if (_slotIdList.length == 0) return bytes32(0);
+        uint256 idx = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, nonce, msg.sender))) % _slotIdList.length;
+        return _slotIdList[idx];
+    }
+
+    function totalPunchlineSupply() external view returns (uint256) {
+        return totalPunchlinesClaimed;
